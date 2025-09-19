@@ -12,13 +12,15 @@
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);font:16px system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--ink)}
-    .wrap{max-width:900px;margin:40px auto;padding:0 16px}
-    h1{font-size:28px;margin:0 0 18px}
+    header{display:flex;align-items:center;gap:12px;padding:18px 16px 0;max-width:900px;margin:0 auto}
+    .logo{height:44px;border-radius:8px;object-fit:cover;opacity:.9}
+    .wrap{max-width:900px;margin:10px auto 40px;padding:0 16px}
+    h1{font-size:28px;margin:0 0 12px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 6px 24px rgba(0,0,0,.06);padding:22px}
     fieldset{border:1px solid var(--line);border-radius:12px;margin:18px 0;padding:14px}
     legend{font-weight:700;padding:0 6px}
     label{font-weight:600;display:block;margin-bottom:6px}
-    input,select,textarea{width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
     textarea{min-height:110px;resize:vertical}
     .grid{display:grid;gap:var(--gap)}
     @media(min-width:720px){.grid-3{grid-template-columns:repeat(3,1fr)} .grid-2{grid-template-columns:repeat(2,1fr)}}
@@ -31,11 +33,16 @@
   </style>
 </head>
 <body>
+  <header>
+    <!-- Διακριτικό logo (path που ζήτησες) -->
+    <img class="logo" src="https://raw.githubusercontent.com/GiorgosBouh/KEDEEA_THESS/main/MK_LOGO_SEO_1200x630.png" alt="MK Logo">
+    <h1>Έντυπο Συμμετοχής και Συναίνεσης</h1>
+  </header>
+
   <div class="wrap">
-    <h1>Έντυπο Συναίνεσης</h1>
     <div class="card">
       <form id="f" novalidate>
-        <!-- πρόσβαση -->
+        <!-- Πρόσβαση -->
         <fieldset>
           <legend>Πρόσβαση</legend>
           <div class="grid grid-2">
@@ -49,12 +56,9 @@
               <div class="muted">Συμπληρώνεται αυτόματα σήμερα· αποθηκεύεται και στον server.</div>
             </div>
           </div>
-          <div class="row">
-            <div class="h-captcha" data-sitekey="HCAPTCHA_SITE_KEY_ΣΟΥ"></div>
-          </div>
         </fieldset>
 
-        <!-- στοιχεία -->
+        <!-- Στοιχεία -->
         <fieldset>
           <legend>Στοιχεία Συμμετέχοντος/Κηδεμόνα</legend>
           <div class="grid grid-3">
@@ -80,9 +84,9 @@
               <label>Φύλο</label>
               <select name="sex">
                 <option value="">—</option>
-                <option>M">Άρρεν</option>
-                <option>F">Θήλυ</option>
-                <option>Other">Άλλο</option>
+                <option value="M">Άρρεν</option>
+                <option value="F">Θήλυ</option>
+                <option value="Other">Άλλο</option>
               </select>
             </div>
             <div>
@@ -106,7 +110,7 @@
           </div>
         </fieldset>
 
-        <!-- υπηρεσίες -->
+        <!-- Υπηρεσίες -->
         <fieldset>
           <legend>Επιλογή Υπηρεσιών</legend>
           <div class="grid grid-3">
@@ -119,7 +123,7 @@
           </div>
         </fieldset>
 
-        <!-- συγκαταθέσεις -->
+        <!-- Συγκαταθέσεις -->
         <fieldset>
           <legend>Συγκαταθέσεις (GDPR)</legend>
           <div class="grid grid-3">
@@ -130,11 +134,18 @@
           </div>
         </fieldset>
 
+        <!-- CAPTCHA στο ΤΕΛΟΣ -->
+        <div class="row" style="margin-top:18px">
+          <div class="h-captcha" data-sitekey="HCAPTCHA_SITE_KEY_ΣΟΥ"></div>
+        </div>
+
+        <!-- Υποβολή -->
         <div class="actions">
           <button type="submit">Υποβολή</button>
           <div id="msg" class="muted"></div>
         </div>
 
+        <!-- Απόδειξη -->
         <div id="receipt" class="row" style="display:none">
           <span class="badge">Submission ID: <span id="subid"></span></span>
         </div>
@@ -143,7 +154,7 @@
   </div>
 
   <script>
-    // 1) Αυτόματη ημερομηνία σήμερα (YYYY-MM-DD)
+    // Αυτόματη συμπλήρωση σημερινής ημερομηνίας (YYYY-MM-DD)
     (function setToday(){
       const t = new Date();
       const yyyy = t.getFullYear();
@@ -152,7 +163,10 @@
       document.querySelector('[name="signed_at"]').value = `${yyyy}-${mm}-${dd}`;
     })();
 
-    const API_URL = "https://<το-backend-σου>/api/consent";
+    // Ρύθμισε αυτά:
+    const API_URL = "https://<TO-BACKEND-SOU>/api/consent";     // π.χ. Render URL
+    // Στο HTML widget έχεις ήδη βάλει το HCAPTCHA_SITE_KEY_ΣΟΥ
+
     const f = document.getElementById('f');
     const msg = document.getElementById('msg');
     const receipt = document.getElementById('receipt');
@@ -170,12 +184,11 @@
        "video_capture","data_processing","biomedical_capture","data_transfer_outside_eu"]
        .forEach(k => data[k] = f.elements[k].checked);
 
-      // hCaptcha token
+      // hCaptcha token (στο ΤΕΛΟΣ)
       const token = document.querySelector('[name="h-captcha-response"]')?.value;
       if (!token) { msg.textContent = "Παρακαλώ λύσε το CAPTCHA."; msg.className="err"; return; }
       data["hcaptcha_token"] = token;
 
-      // το backend περιμένει first/last_name: αν θες μπορεί να κρατά και full_name
       try {
         const res = await fetch(API_URL, {
           method: "POST",
@@ -184,14 +197,18 @@
         });
         if (!res.ok) throw new Error("HTTP "+res.status);
         const j = await res.json();
+
         msg.textContent = "✅ Καταχωρήθηκε επιτυχώς.";
         msg.className = "ok";
+
         if (j?.participant_id){
           subid.textContent = j.participant_id;
           receipt.style.display = "block";
         }
-        f.reset(); if (window.hcaptcha) hcaptcha.reset();
-        // ξαναβάλε σημερινή ημερομηνία μετά το reset
+
+        f.reset();
+        if (window.hcaptcha) hcaptcha.reset();
+        // ξανα-βάλε σημερινή ημερομηνία μετά το reset
         document.querySelector('[name="signed_at"]').valueAsDate = new Date();
       } catch (err) {
         msg.textContent = "❌ Σφάλμα υποβολής. Δοκίμασε ξανά.";
