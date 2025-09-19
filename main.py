@@ -145,4 +145,4 @@ def create_consent(p: ConsentIn):
         conn.close()
         return {"status": "ok", "participant_id": participant_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
