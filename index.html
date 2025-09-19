@@ -155,8 +155,7 @@
     const dd = String(t.getDate()).padStart(2,'0');
     document.querySelector('[name="signed_at"]').value = `${yyyy}-${mm}-${dd}`;
   })();
-
-  const API_URL = "http://127.0.0.1:8001/api/consent";
+  const API_URL = "https://applied-yacht-demanding-ask.trycloudflare.com/api/consent";
 
   const f = document.getElementById('f');
   const msg = document.getElementById('msg');
