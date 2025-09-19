@@ -156,8 +156,8 @@
       document.querySelector('[name="signed_at"]').value = `${yyyy}-${mm}-${dd}`;
     })();
 
-    // Βάλε εδώ το backend URL σου (Render/Railway κ.λπ.)
-    const API_URL = "https://<TO-BACKEND-SOU>/api/consent";
+    // 👉 Τοπικό backend (FastAPI + SQLite)
+    const API_URL = "http://127.0.0.1:8001/api/consent";
 
     const f = document.getElementById('f');
     const msg = document.getElementById('msg');
@@ -174,6 +174,13 @@
       ["physio","ergo","logo","diet","gait_analysis","counseling",
        "video_capture","data_processing","biomedical_capture","data_transfer_outside_eu"]
        .forEach(k => data[k] = f.elements[k].checked);
+
+      // Απλός front-end έλεγχος για κωδικό
+      if (!data.access_code) {
+        msg.textContent = "🔒 Συμπλήρωσε τον κωδικό πρόσβασης.";
+        msg.className = "err";
+        return;
+      }
 
       try {
         const res = await fetch(API_URL, {
@@ -199,7 +206,7 @@
         }
 
         f.reset();
-        document.querySelector('[name=\"signed_at\"]').valueAsDate = new Date();
+        document.querySelector('[name="signed_at"]').valueAsDate = new Date();
 
       } catch (err) {
         msg.textContent = "❌ Σφάλμα υποβολής. Δοκίμασε ξανά.";
