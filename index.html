@@ -2,119 +2,199 @@
 <html lang="el">
 <head>
   <meta charset="utf-8">
-  <title>Έντυπο Συναίνεσης ΚΕ.Δ.Ε.Ε.Α.</title>
+  <title>Έντυπο Συναίνεσης</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
   <style>
-    body{font-family:system-ui,-apple-system,Arial;margin:0;padding:24px;}
-    form{max-width:720px;margin:auto;padding:20px;border:1px solid #ddd;border-radius:12px}
-    fieldset{border:1px solid #eee;border-radius:8px;margin:16px 0;padding:12px}
-    label{display:block;margin-top:10px;font-weight:600}
-    input,textarea,select{width:100%;padding:10px;margin-top:6px;border:1px solid #ccc;border-radius:8px}
-    .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-    .row{margin-top:12px}
-    button{padding:12px 16px;border-radius:10px;border:1px solid #ccc;cursor:pointer}
-    .ok{color:#0a7d26;margin-top:10px}
-    .err{color:#b00020;margin-top:10px}
+    :root{
+      --bg:#f7f7fb; --card:#fff; --ink:#111; --muted:#666; --line:#e9e9ef; --accent:#2563eb;
+      --radius:16px; --gap:14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font:16px system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--ink)}
+    .wrap{max-width:900px;margin:40px auto;padding:0 16px}
+    h1{font-size:28px;margin:0 0 18px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 6px 24px rgba(0,0,0,.06);padding:22px}
+    fieldset{border:1px solid var(--line);border-radius:12px;margin:18px 0;padding:14px}
+    legend{font-weight:700;padding:0 6px}
+    label{font-weight:600;display:block;margin-bottom:6px}
+    input,select,textarea{width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    textarea{min-height:110px;resize:vertical}
+    .grid{display:grid;gap:var(--gap)}
+    @media(min-width:720px){.grid-3{grid-template-columns:repeat(3,1fr)} .grid-2{grid-template-columns:repeat(2,1fr)}}
+    .muted{color:var(--muted);font-size:14px}
+    .row{margin-top:10px}
+    .actions{display:flex;gap:10px;align-items:center;margin-top:14px}
+    button{background:var(--accent);border:0;color:#fff;padding:12px 18px;border-radius:12px;cursor:pointer;font-weight:700}
+    .ok{color:#0a7d26} .err{color:#b00020}
+    .badge{display:inline-block;background:#eef2ff;color:#3730a3;padding:6px 10px;border-radius:999px;font-size:13px;border:1px solid #c7d2fe}
   </style>
 </head>
 <body>
-  <h1>Έντυπο Συναίνεσης</h1>
-  <form id="f">
-    <fieldset>
-      <legend>Στοιχεία Συμμετέχοντος/Κηδεμόνα</legend>
-      <div class="grid">
-        <div>
-          <label>Ονοματεπώνυμο Συμμετέχοντος</label>
-          <input name="participant_name" required>
-        </div>
-        <div>
-          <label>Κηδεμόνας (αν υπάρχει)</label>
-          <input name="guardian_name">
-        </div>
-        <div>
-          <label>Email</label>
-          <input name="email" type="email">
-        </div>
-        <div>
-          <label>Τηλέφωνο</label>
-          <input name="phone">
-        </div>
-        <div>
-          <label>Φύλο</label>
-          <select name="sex">
-            <option value="">—</option>
-            <option>M</option><option>F</option><option>Other</option>
-          </select>
-        </div>
-        <div>
-          <label>Ηλικία</label>
-          <input name="age" type="number" min="0">
-        </div>
-      </div>
-      <div class="grid">
-        <div><label>Διεύθυνση</label><input name="address_line"></div>
-        <div><label>Πόλη</label><input name="city"></div>
-        <div><label>ΤΚ</label><input name="postal_code"></div>
-      </div>
-      <label>Ιατρικό ιστορικό / Σημειώσεις</label>
-      <textarea name="medical_history" rows="4"></textarea>
-    </fieldset>
+  <div class="wrap">
+    <h1>Έντυπο Συναίνεσης</h1>
+    <div class="card">
+      <form id="f" novalidate>
+        <!-- πρόσβαση -->
+        <fieldset>
+          <legend>Πρόσβαση</legend>
+          <div class="grid grid-2">
+            <div>
+              <label>Κωδικός πρόσβασης <span class="muted">(παρέχεται εσωτερικά)</span></label>
+              <input name="access_code" type="password" required>
+            </div>
+            <div>
+              <label>Ημερομηνία</label>
+              <input name="signed_at" type="date" required>
+              <div class="muted">Συμπληρώνεται αυτόματα σήμερα· αποθηκεύεται και στον server.</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="h-captcha" data-sitekey="HCAPTCHA_SITE_KEY_ΣΟΥ"></div>
+          </div>
+        </fieldset>
 
-    <fieldset>
-      <legend>Επιλογή Υπηρεσιών</legend>
-      <div class="grid">
-        <label><input type="checkbox" name="physio"> Φυσικοθεραπεία</label>
-        <label><input type="checkbox" name="ergo"> Εργοθεραπεία</label>
-        <label><input type="checkbox" name="logo"> Λογοθεραπεία</label>
-        <label><input type="checkbox" name="diet"> Διαιτολογία</label>
-        <label><input type="checkbox" name="gait_analysis"> Ανάλυση Βάδισης</label>
-        <label><input type="checkbox" name="counseling"> Συμβουλευτική/Ψυχομετρική</label>
-      </div>
-    </fieldset>
+        <!-- στοιχεία -->
+        <fieldset>
+          <legend>Στοιχεία Συμμετέχοντος/Κηδεμόνα</legend>
+          <div class="grid grid-3">
+            <div>
+              <label>Όνομα</label>
+              <input name="first_name" required>
+            </div>
+            <div>
+              <label>Επώνυμο</label>
+              <input name="last_name" required>
+            </div>
+            <div>
+              <label>Email</label>
+              <input name="email" type="email">
+            </div>
+          </div>
+          <div class="grid grid-3">
+            <div>
+              <label>Τηλέφωνο</label>
+              <input name="phone">
+            </div>
+            <div>
+              <label>Φύλο</label>
+              <select name="sex">
+                <option value="">—</option>
+                <option>M">Άρρεν</option>
+                <option>F">Θήλυ</option>
+                <option>Other">Άλλο</option>
+              </select>
+            </div>
+            <div>
+              <label>Ηλικία</label>
+              <input name="age" type="number" min="0">
+            </div>
+          </div>
+          <div class="grid grid-3">
+            <div><label>Διεύθυνση</label><input name="address_line"></div>
+            <div><label>Πόλη</label><input name="city"></div>
+            <div><label>ΤΚ</label><input name="postal_code"></div>
+          </div>
+          <div class="row">
+            <label>Κηδεμόνας (αν υπάρχει)</label>
+            <input name="guardian_name">
+          </div>
+          <div class="row">
+            <label>Ιατρικό ιστορικό / Σημειώσεις</label>
+            <textarea name="medical_history"></textarea>
+            <div class="muted">Καταγράφεται μόνο το απολύτως αναγκαίο (GDPR).</div>
+          </div>
+        </fieldset>
 
-    <fieldset>
-      <legend>Συγκαταθέσεις (GDPR)</legend>
-      <div class="grid">
-        <label><input type="checkbox" name="video_capture"> Βιντεοσκόπηση συνεδριών</label>
-        <label><input type="checkbox" name="data_processing"> Επεξεργασία προσωπικών δεδομένων</label>
-        <label><input type="checkbox" name="biomedical_capture"> Συλλογή δεδομένων από βιοϊατρικές συσκευές/φωτογράφηση</label>
-        <label><input type="checkbox" name="data_transfer_outside_eu"> Διαβίβαση εκτός ΕΕ (όπου απαιτείται)</label>
-      </div>
-      <div class="row">
-        <label>Ημερομηνία Υπογραφής</label>
-        <input type="date" name="signed_at">
-      </div>
-    </fieldset>
+        <!-- υπηρεσίες -->
+        <fieldset>
+          <legend>Επιλογή Υπηρεσιών</legend>
+          <div class="grid grid-3">
+            <label><input type="checkbox" name="physio"> Φυσικοθεραπεία</label>
+            <label><input type="checkbox" name="ergo"> Εργοθεραπεία</label>
+            <label><input type="checkbox" name="logo"> Λογοθεραπεία</label>
+            <label><input type="checkbox" name="diet"> Διαιτολογία</label>
+            <label><input type="checkbox" name="gait_analysis"> Ανάλυση Βάδισης</label>
+            <label><input type="checkbox" name="counseling"> Συμβουλευτική/Ψυχομετρική</label>
+          </div>
+        </fieldset>
 
-    <button type="submit">Υποβολή</button>
-    <div id="msg"></div>
-  </form>
+        <!-- συγκαταθέσεις -->
+        <fieldset>
+          <legend>Συγκαταθέσεις (GDPR)</legend>
+          <div class="grid grid-3">
+            <label><input type="checkbox" name="video_capture"> Βιντεοσκόπηση συνεδριών</label>
+            <label><input type="checkbox" name="data_processing"> Επεξεργασία προσωπικών δεδομένων</label>
+            <label><input type="checkbox" name="biomedical_capture"> Βιοϊατρικά δεδομένα/φωτογράφιση</label>
+            <label><input type="checkbox" name="data_transfer_outside_eu"> Διαβίβαση εκτός ΕΕ (όπου απαιτείται)</label>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit">Υποβολή</button>
+          <div id="msg" class="muted"></div>
+        </div>
+
+        <div id="receipt" class="row" style="display:none">
+          <span class="badge">Submission ID: <span id="subid"></span></span>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>
-    const API_URL = "https://<το-backend-σου>/api/consent"; // θα το ορίσεις μετά το deploy
+    // 1) Αυτόματη ημερομηνία σήμερα (YYYY-MM-DD)
+    (function setToday(){
+      const t = new Date();
+      const yyyy = t.getFullYear();
+      const mm = String(t.getMonth()+1).padStart(2,'0');
+      const dd = String(t.getDate()).padStart(2,'0');
+      document.querySelector('[name="signed_at"]').value = `${yyyy}-${mm}-${dd}`;
+    })();
+
+    const API_URL = "https://<το-backend-σου>/api/consent";
     const f = document.getElementById('f');
     const msg = document.getElementById('msg');
+    const receipt = document.getElementById('receipt');
+    const subid = document.getElementById('subid');
 
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const data = Object.fromEntries(new FormData(f).entries());
-      // Μετατροπή checkbox σε boolean
-      ["physio","ergo","logo","diet","gait_analysis","counseling","video_capture","data_processing","biomedical_capture","data_transfer_outside_eu"]
-        .forEach(k => data[k] = f.elements[k].checked);
       msg.textContent = "Υποβολή...";
-      msg.className = "";
+      msg.className = "muted";
+      receipt.style.display = "none";
+
+      const data = Object.fromEntries(new FormData(f).entries());
+      // checkboxes -> boolean
+      ["physio","ergo","logo","diet","gait_analysis","counseling",
+       "video_capture","data_processing","biomedical_capture","data_transfer_outside_eu"]
+       .forEach(k => data[k] = f.elements[k].checked);
+
+      // hCaptcha token
+      const token = document.querySelector('[name="h-captcha-response"]')?.value;
+      if (!token) { msg.textContent = "Παρακαλώ λύσε το CAPTCHA."; msg.className="err"; return; }
+      data["hcaptcha_token"] = token;
+
+      // το backend περιμένει first/last_name: αν θες μπορεί να κρατά και full_name
       try {
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error("HTTP " + res.status);
+        if (!res.ok) throw new Error("HTTP "+res.status);
+        const j = await res.json();
         msg.textContent = "✅ Καταχωρήθηκε επιτυχώς.";
         msg.className = "ok";
-        f.reset();
+        if (j?.participant_id){
+          subid.textContent = j.participant_id;
+          receipt.style.display = "block";
+        }
+        f.reset(); if (window.hcaptcha) hcaptcha.reset();
+        // ξαναβάλε σημερινή ημερομηνία μετά το reset
+        document.querySelector('[name="signed_at"]').valueAsDate = new Date();
       } catch (err) {
-        msg.textContent = "❌ Σφάλμα υποβολής.";
+        msg.textContent = "❌ Σφάλμα υποβολής. Δοκίμασε ξανά.";
         msg.className = "err";
       }
     });
