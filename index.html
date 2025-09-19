@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <title>Έντυπο Συναίνεσης ΚΕ.Δ.Ε.Ε.Α.</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:system-ui,-apple-system,Arial;margin:0;padding:24px;}
+    form{max-width:720px;margin:auto;padding:20px;border:1px solid #ddd;border-radius:12px}
+    fieldset{border:1px solid #eee;border-radius:8px;margin:16px 0;padding:12px}
+    label{display:block;margin-top:10px;font-weight:600}
+    input,textarea,select{width:100%;padding:10px;margin-top:6px;border:1px solid #ccc;border-radius:8px}
+    .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .row{margin-top:12px}
+    button{padding:12px 16px;border-radius:10px;border:1px solid #ccc;cursor:pointer}
+    .ok{color:#0a7d26;margin-top:10px}
+    .err{color:#b00020;margin-top:10px}
+  </style>
+</head>
+<body>
+  <h1>Έντυπο Συναίνεσης</h1>
+  <form id="f">
+    <fieldset>
+      <legend>Στοιχεία Συμμετέχοντος/Κηδεμόνα</legend>
+      <div class="grid">
+        <div>
+          <label>Ονοματεπώνυμο Συμμετέχοντος</label>
+          <input name="participant_name" required>
+        </div>
+        <div>
+          <label>Κηδεμόνας (αν υπάρχει)</label>
+          <input name="guardian_name">
+        </div>
+        <div>
+          <label>Email</label>
+          <input name="email" type="email">
+        </div>
+        <div>
+          <label>Τηλέφωνο</label>
+          <input name="phone">
+        </div>
+        <div>
+          <label>Φύλο</label>
+          <select name="sex">
+            <option value="">—</option>
+            <option>M</option><option>F</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Ηλικία</label>
+          <input name="age" type="number" min="0">
+        </div>
+      </div>
+      <div class="grid">
+        <div><label>Διεύθυνση</label><input name="address_line"></div>
+        <div><label>Πόλη</label><input name="city"></div>
+        <div><label>ΤΚ</label><input name="postal_code"></div>
+      </div>
+      <label>Ιατρικό ιστορικό / Σημειώσεις</label>
+      <textarea name="medical_history" rows="4"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>Επιλογή Υπηρεσιών</legend>
+      <div class="grid">
+        <label><input type="checkbox" name="physio"> Φυσικοθεραπεία</label>
+        <label><input type="checkbox" name="ergo"> Εργοθεραπεία</label>
+        <label><input type="checkbox" name="logo"> Λογοθεραπεία</label>
+        <label><input type="checkbox" name="diet"> Διαιτολογία</label>
+        <label><input type="checkbox" name="gait_analysis"> Ανάλυση Βάδισης</label>
+        <label><input type="checkbox" name="counseling"> Συμβουλευτική/Ψυχομετρική</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Συγκαταθέσεις (GDPR)</legend>
+      <div class="grid">
+        <label><input type="checkbox" name="video_capture"> Βιντεοσκόπηση συνεδριών</label>
+        <label><input type="checkbox" name="data_processing"> Επεξεργασία προσωπικών δεδομένων</label>
+        <label><input type="checkbox" name="biomedical_capture"> Συλλογή δεδομένων από βιοϊατρικές συσκευές/φωτογράφηση</label>
+        <label><input type="checkbox" name="data_transfer_outside_eu"> Διαβίβαση εκτός ΕΕ (όπου απαιτείται)</label>
+      </div>
+      <div class="row">
+        <label>Ημερομηνία Υπογραφής</label>
+        <input type="date" name="signed_at">
+      </div>
+    </fieldset>
+
+    <button type="submit">Υποβολή</button>
+    <div id="msg"></div>
+  </form>
+
+  <script>
+    const API_URL = "https://<το-backend-σου>/api/consent"; // θα το ορίσεις μετά το deploy
+    const f = document.getElementById('f');
+    const msg = document.getElementById('msg');
+
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(f).entries());
+      // Μετατροπή checkbox σε boolean
+      ["physio","ergo","logo","diet","gait_analysis","counseling","video_capture","data_processing","biomedical_capture","data_transfer_outside_eu"]
+        .forEach(k => data[k] = f.elements[k].checked);
+      msg.textContent = "Υποβολή...";
+      msg.className = "";
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        msg.textContent = "✅ Καταχωρήθηκε επιτυχώς.";
+        msg.className = "ok";
+        f.reset();
+      } catch (err) {
+        msg.textContent = "❌ Σφάλμα υποβολής.";
+        msg.className = "err";
+      }
+    });
+  </script>
+</body>
+</html>
