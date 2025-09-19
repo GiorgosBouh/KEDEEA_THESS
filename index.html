@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <title>Έντυπο Συναίνεσης</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
   <style>
     :root{
       --bg:#f7f7fb; --card:#fff; --ink:#111; --muted:#666; --line:#e9e9ef; --accent:#2563eb;
@@ -34,9 +33,9 @@
 </head>
 <body>
   <header>
-    <!-- Διακριτικό logo (path που ζήτησες) -->
+    <!-- Διακριτικό logo -->
     <img class="logo" src="https://raw.githubusercontent.com/GiorgosBouh/KEDEEA_THESS/main/MK_LOGO_SEO_1200x630.png" alt="MK Logo">
-    <h1>Έντυπο Συμμετοχής και Συναίνεσης</h1>
+    <h1>Έντυπο Συναίνεσης</h1>
   </header>
 
   <div class="wrap">
@@ -53,7 +52,7 @@
             <div>
               <label>Ημερομηνία</label>
               <input name="signed_at" type="date" required>
-              <div class="muted">Συμπληρώνεται αυτόματα σήμερα· αποθηκεύεται και στον server.</div>
+              <div class="muted">Συμπληρώνεται αυτόματα σήμερα.</div>
             </div>
           </div>
         </fieldset>
@@ -106,7 +105,6 @@
           <div class="row">
             <label>Ιατρικό ιστορικό / Σημειώσεις</label>
             <textarea name="medical_history"></textarea>
-            <div class="muted">Καταγράφεται μόνο το απολύτως αναγκαίο (GDPR).</div>
           </div>
         </fieldset>
 
@@ -130,14 +128,9 @@
             <label><input type="checkbox" name="video_capture"> Βιντεοσκόπηση συνεδριών</label>
             <label><input type="checkbox" name="data_processing"> Επεξεργασία προσωπικών δεδομένων</label>
             <label><input type="checkbox" name="biomedical_capture"> Βιοϊατρικά δεδομένα/φωτογράφιση</label>
-            <label><input type="checkbox" name="data_transfer_outside_eu"> Διαβίβαση εκτός ΕΕ (όπου απαιτείται)</label>
+            <label><input type="checkbox" name="data_transfer_outside_eu"> Διαβίβαση εκτός ΕΕ</label>
           </div>
         </fieldset>
-
-        <!-- CAPTCHA στο ΤΕΛΟΣ -->
-        <div class="row" style="margin-top:18px">
-          <div class="h-captcha" data-sitekey="HCAPTCHA_SITE_KEY_ΣΟΥ"></div>
-        </div>
 
         <!-- Υποβολή -->
         <div class="actions">
@@ -163,9 +156,8 @@
       document.querySelector('[name="signed_at"]').value = `${yyyy}-${mm}-${dd}`;
     })();
 
-    // Ρύθμισε αυτά:
-    const API_URL = "https://<TO-BACKEND-SOU>/api/consent";     // π.χ. Render URL
-    // Στο HTML widget έχεις ήδη βάλει το HCAPTCHA_SITE_KEY_ΣΟΥ
+    // Ρύθμισε το backend URL
+    const API_URL = "https://<TO-BACKEND-SOU>/api/consent";
 
     const f = document.getElementById('f');
     const msg = document.getElementById('msg');
@@ -179,15 +171,9 @@
       receipt.style.display = "none";
 
       const data = Object.fromEntries(new FormData(f).entries());
-      // checkboxes -> boolean
       ["physio","ergo","logo","diet","gait_analysis","counseling",
        "video_capture","data_processing","biomedical_capture","data_transfer_outside_eu"]
        .forEach(k => data[k] = f.elements[k].checked);
-
-      // hCaptcha token (στο ΤΕΛΟΣ)
-      const token = document.querySelector('[name="h-captcha-response"]')?.value;
-      if (!token) { msg.textContent = "Παρακαλώ λύσε το CAPTCHA."; msg.className="err"; return; }
-      data["hcaptcha_token"] = token;
 
       try {
         const res = await fetch(API_URL, {
@@ -207,11 +193,9 @@
         }
 
         f.reset();
-        if (window.hcaptcha) hcaptcha.reset();
-        // ξανα-βάλε σημερινή ημερομηνία μετά το reset
         document.querySelector('[name="signed_at"]').valueAsDate = new Date();
       } catch (err) {
-        msg.textContent = "❌ Σφάλμα υποβολής. Δοκίμασε ξανά.";
+        msg.textContent = "❌ Σφάλμα υποβολής.";
         msg.className = "err";
       }
     });
