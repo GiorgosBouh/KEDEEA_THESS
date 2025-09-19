@@ -1,21 +1,18 @@
 import os
+import sqlite3
 from datetime import date
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import create_engine, text
 
-# === Παραμετροποίηση περιβάλλοντος ===
-DATABASE_URL   = os.getenv("DATABASE_URL")  # π.χ. postgresql+psycopg://user:pass@host:5432/db
-ACCESS_CODE    = os.getenv("ACCESS_CODE", "0000")  # <-- προεπιλογή 0000
+# === ΡΥΘΜΙΣΕΙΣ ===
+DB_PATH      = os.getenv("DB_PATH", "kedeea.db")   # π.χ. ./data/kedeea.db
+ACCESS_CODE  = os.getenv("ACCESS_CODE", "0000")    # ο κωδικός σου
+ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "*")  # π.χ. http://127.0.0.1:8000 ή https://<username>.github.io
 
-ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "*")  # ιδανικά βάλε π.χ. https://giorgosbouh.github.io
-
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-
-app = FastAPI(title="Kedeea Consent API")
+app = FastAPI(title="KE.D.E.E.A Consent API (SQLite)")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +20,56 @@ app.add_middleware(
     allow_methods=["POST", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
+
+# === ΒΟΗΘΗΤΙΚΑ ===
+def get_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
+
+def init_db():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS participants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      first_name TEXT NOT NULL,
+      last_name  TEXT NOT NULL,
+      guardian_name TEXT,
+      address_line TEXT,
+      city TEXT,
+      postal_code TEXT,
+      phone TEXT,
+      email TEXT,
+      sex TEXT,
+      age INTEGER,
+      medical_history TEXT,
+      created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+    );
+    """)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS consents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      participant_id INTEGER NOT NULL,
+      physio INTEGER DEFAULT 0,
+      ergo INTEGER DEFAULT 0,
+      logo INTEGER DEFAULT 0,
+      diet INTEGER DEFAULT 0,
+      gait_analysis INTEGER DEFAULT 0,
+      counseling INTEGER DEFAULT 0,
+      video_capture INTEGER DEFAULT 0,
+      data_processing INTEGER DEFAULT 0,
+      data_transfer_outside_eu INTEGER DEFAULT 0,
+      biomedical_capture INTEGER DEFAULT 0,
+      signed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+      FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE
+    );
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
 
 class ConsentIn(BaseModel):
     # πρόσβαση
@@ -58,6 +105,8 @@ class ConsentIn(BaseModel):
     # ημερομηνία
     signed_at: Optional[date] = None
 
+def b(x: bool) -> int:
+    return 1 if x else 0
 
 @app.post("/api/consent")
 def create_consent(p: ConsentIn):
@@ -66,49 +115,34 @@ def create_consent(p: ConsentIn):
         raise HTTPException(status_code=403, detail="Invalid access code")
 
     # 2) Default ημερομηνίας αν λείπει
-    signed = p.signed_at or date.today()
+    signed = str(p.signed_at or date.today())  # 'YYYY-MM-DD'
 
-    # 3) Εισαγωγή στη βάση
+    # 3) Εισαγωγή στη SQLite
     try:
-        with engine.begin() as conn:
-            pid = conn.execute(text("""
-                insert into participants
-                  (first_name, last_name, guardian_name, address_line, city, postal_code,
-                   phone, email, sex, age, medical_history)
-                values
-                  (:first_name, :last_name, :guardian_name, :address_line, :city, :postal_code,
-                   :phone, :email, :sex, :age, :medical_history)
-                returning id
-            """), dict(
-                first_name=p.first_name.strip(),
-                last_name=p.last_name.strip(),
-                guardian_name=p.guardian_name,
-                address_line=p.address_line,
-                city=p.city,
-                postal_code=p.postal_code,
-                phone=p.phone,
-                email=p.email,
-                sex=p.sex,
-                age=p.age,
-                medical_history=p.medical_history
-            )).scalar_one()
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO participants
+            (first_name, last_name, guardian_name, address_line, city, postal_code,
+             phone, email, sex, age, medical_history)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            p.first_name.strip(), p.last_name.strip(), p.guardian_name, p.address_line, p.city, p.postal_code,
+            p.phone, p.email, p.sex, p.age, p.medical_history
+        ))
+        participant_id = cur.lastrowid
 
-            conn.execute(text("""
-                insert into consents
-                  (participant_id, physio, ergo, logo, diet, gait_analysis, counseling,
-                   video_capture, data_processing, data_transfer_outside_eu, biomedical_capture, signed_at)
-                values
-                  (:participant_id, :physio, :ergo, :logo, :diet, :gait_analysis, :counseling,
-                   :video_capture, :data_processing, :data_transfer_outside_eu, :biomedical_capture, :signed_at)
-            """), dict(
-                participant_id=pid,
-                physio=p.physio, ergo=p.ergo, logo=p.logo, diet=p.diet,
-                gait_analysis=p.gait_analysis, counseling=p.counseling,
-                video_capture=p.video_capture, data_processing=p.data_processing,
-                data_transfer_outside_eu=p.data_transfer_outside_eu, biomedical_capture=p.biomedical_capture,
-                signed_at=signed
-            ))
-
-        return {"status": "ok", "participant_id": str(pid)}
+        cur.execute("""
+            INSERT INTO consents
+            (participant_id, physio, ergo, logo, diet, gait_analysis, counseling,
+             video_capture, data_processing, data_transfer_outside_eu, biomedical_capture, signed_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            participant_id, b(p.physio), b(p.ergo), b(p.logo), b(p.diet), b(p.gait_analysis), b(p.counseling),
+            b(p.video_capture), b(p.data_processing), b(p.data_transfer_outside_eu), b(p.biomedical_capture), signed
+        ))
+        conn.commit()
+        conn.close()
+        return {"status": "ok", "participant_id": participant_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))        raise HTTPException(status_code=500, detail=str(e))
